@@ -66,6 +66,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
 import org.springframework.boot.testsupport.system.CapturedOutput;
+import org.springframework.boot.web.server.PortInUseException;
 import org.springframework.boot.web.server.WebServerException;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactoryTests;
@@ -104,7 +105,7 @@ class TomcatServletWebServerFactoryTests extends AbstractServletWebServerFactory
 	}
 
 	@AfterEach
-	public void restoreTccl() {
+	void restoreTccl() {
 		ReflectionTestUtils.setField(TomcatURLStreamHandlerFactory.class, "instance", null);
 		ReflectionTestUtils.setField(URL.class, "factory", null);
 		Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
@@ -324,18 +325,6 @@ class TomcatServletWebServerFactoryTests extends AbstractServletWebServerFactory
 		Tomcat tomcat = getTomcat(factory);
 		Connector connector = ((TomcatWebServer) this.webServer).getServiceConnectors().get(tomcat.getService())[0];
 		assertThat(connector.getURIEncoding()).isEqualTo("UTF-8");
-	}
-
-	@Test
-	void primaryConnectorPortClashThrowsWebServerException() throws IOException {
-		doWithBlockedPort((port) -> {
-			TomcatServletWebServerFactory factory = getFactory();
-			factory.setPort(port);
-			assertThatExceptionOfType(WebServerException.class).isThrownBy(() -> {
-				this.webServer = factory.getWebServer();
-				this.webServer.start();
-			});
-		});
 	}
 
 	@Test
@@ -593,7 +582,13 @@ class TomcatServletWebServerFactoryTests extends AbstractServletWebServerFactory
 	}
 
 	@Override
-	protected void handleExceptionCausedByBlockedPort(RuntimeException ex, int blockedPort) {
+	protected void handleExceptionCausedByBlockedPortOnPrimaryConnector(RuntimeException ex, int blockedPort) {
+		assertThat(ex).isInstanceOf(PortInUseException.class);
+		assertThat(((PortInUseException) ex).getPort()).isEqualTo(blockedPort);
+	}
+
+	@Override
+	protected void handleExceptionCausedByBlockedPortOnSecondaryConnector(RuntimeException ex, int blockedPort) {
 		assertThat(ex).isInstanceOf(ConnectorStartFailedException.class);
 		assertThat(((ConnectorStartFailedException) ex).getPort()).isEqualTo(blockedPort);
 	}

@@ -42,7 +42,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 class GrabCommandIntegrationTests {
 
 	@RegisterExtension
-	private CliTester cli;
+	CliTester cli;
 
 	GrabCommandIntegrationTests(CapturedOutput capturedOutput) {
 		this.cli = new CliTester("src/test/resources/grab-samples/", capturedOutput);
@@ -50,7 +50,7 @@ class GrabCommandIntegrationTests {
 
 	@BeforeEach
 	@AfterEach
-	public void deleteLocalRepository() {
+	void deleteLocalRepository() {
 		System.clearProperty("grape.root");
 		System.clearProperty("groovy.grape.report.downloads");
 	}

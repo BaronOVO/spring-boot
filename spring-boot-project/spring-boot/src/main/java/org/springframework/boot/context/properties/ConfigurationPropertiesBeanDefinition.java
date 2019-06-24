@@ -46,7 +46,6 @@ final class ConfigurationPropertiesBeanDefinition extends GenericBeanDefinition 
 	private static <T> Supplier<T> createBean(ConfigurableListableBeanFactory beanFactory, String beanName,
 			Class<T> type) {
 		return () -> {
-			// FIXME review
 			ConfigurationProperties annotation = getAnnotation(type, ConfigurationProperties.class);
 			Validated validated = getAnnotation(type, Validated.class);
 			Annotation[] annotations = (validated != null) ? new Annotation[] { annotation, validated }
@@ -55,7 +54,7 @@ final class ConfigurationPropertiesBeanDefinition extends GenericBeanDefinition 
 			ConfigurationPropertiesBinder binder = beanFactory.getBean(ConfigurationPropertiesBinder.BEAN_NAME,
 					ConfigurationPropertiesBinder.class);
 			try {
-				return binder.bind(bindable).orElseCreate(type);
+				return binder.bindOrCreate(bindable);
 			}
 			catch (Exception ex) {
 				throw new ConfigurationPropertiesBindException(beanName, type, annotation, ex);

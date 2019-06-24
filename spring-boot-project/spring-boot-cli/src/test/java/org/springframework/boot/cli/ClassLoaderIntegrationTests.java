@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ClassLoaderIntegrationTests {
 
 	@RegisterExtension
-	private CliTester cli;
+	CliTester cli;
 
 	ClassLoaderIntegrationTests(CapturedOutput capturedOutput) {
 		this.cli = new CliTester("src/test/resources/", capturedOutput);

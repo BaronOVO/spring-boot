@@ -24,8 +24,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.codec.CharSequenceEncoder;
 import org.springframework.core.codec.StringDecoder;
-import org.springframework.messaging.rsocket.MessageHandlerAcceptor;
 import org.springframework.messaging.rsocket.RSocketStrategies;
+import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHandler;
 import org.springframework.web.util.pattern.PathPatternRouteMatcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,15 +37,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class RSocketMessagingAutoConfigurationTests {
 
-	private ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(RSocketMessagingAutoConfiguration.class))
 			.withUserConfiguration(BaseConfiguration.class);
 
 	@Test
 	void shouldCreateDefaultBeans() {
 		this.contextRunner.run((context) -> {
-			assertThat(context).getBeans(MessageHandlerAcceptor.class).hasSize(1);
-			assertThat(context.getBean(MessageHandlerAcceptor.class).getRouteMatcher())
+			assertThat(context).getBeans(RSocketMessageHandler.class).hasSize(1);
+			assertThat(context.getBean(RSocketMessageHandler.class).getRouteMatcher())
 					.isInstanceOf(PathPatternRouteMatcher.class);
 		});
 	}
@@ -61,13 +61,12 @@ class RSocketMessagingAutoConfigurationTests {
 	}
 
 	@Test
-	void shouldUseCustomMessageHandlerAcceptor() {
-		this.contextRunner.withUserConfiguration(CustomMessageHandlerAcceptor.class)
-				.run((context) -> assertThat(context).getBeanNames(MessageHandlerAcceptor.class)
-						.containsOnly("customMessageHandlerAcceptor"));
+	void shouldUseCustomSocketAcceptor() {
+		this.contextRunner.withUserConfiguration(CustomMessageHandler.class).run((context) -> assertThat(context)
+				.getBeanNames(RSocketMessageHandler.class).containsOnly("customMessageHandler"));
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class BaseConfiguration {
 
 		@Bean
@@ -78,16 +77,16 @@ class RSocketMessagingAutoConfigurationTests {
 
 	}
 
-	@Configuration
-	static class CustomMessageHandlerAcceptor {
+	@Configuration(proxyBeanMethods = false)
+	static class CustomMessageHandler {
 
 		@Bean
-		public MessageHandlerAcceptor customMessageHandlerAcceptor() {
-			MessageHandlerAcceptor acceptor = new MessageHandlerAcceptor();
+		public RSocketMessageHandler customMessageHandler() {
+			RSocketMessageHandler messageHandler = new RSocketMessageHandler();
 			RSocketStrategies strategies = RSocketStrategies.builder().encoder(CharSequenceEncoder.textPlainOnly())
 					.decoder(StringDecoder.textPlainOnly()).build();
-			acceptor.setRSocketStrategies(strategies);
-			return acceptor;
+			messageHandler.setRSocketStrategies(strategies);
+			return messageHandler;
 		}
 
 	}

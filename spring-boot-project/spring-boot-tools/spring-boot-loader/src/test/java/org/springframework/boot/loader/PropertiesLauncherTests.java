@@ -62,14 +62,14 @@ class PropertiesLauncherTests {
 	private CapturedOutput capturedOutput;
 
 	@BeforeEach
-	public void setup(CapturedOutput capturedOutput) {
+	void setup(CapturedOutput capturedOutput) {
 		this.contextClassLoader = Thread.currentThread().getContextClassLoader();
 		System.setProperty("loader.home", new File("src/test/resources").getAbsolutePath());
 		this.capturedOutput = capturedOutput;
 	}
 
 	@AfterEach
-	public void close() {
+	void close() {
 		Thread.currentThread().setContextClassLoader(this.contextClassLoader);
 		System.clearProperty("loader.home");
 		System.clearProperty("loader.path");
@@ -312,7 +312,9 @@ class PropertiesLauncherTests {
 		manifest.getMainAttributes().putValue("Loader-Path", "/foo.jar, /bar");
 		File manifestFile = new File(this.tempDir, "META-INF/MANIFEST.MF");
 		manifestFile.getParentFile().mkdirs();
-		manifest.write(new FileOutputStream(manifestFile));
+		try (FileOutputStream output = new FileOutputStream(manifestFile)) {
+			manifest.write(output);
+		}
 		PropertiesLauncher launcher = new PropertiesLauncher();
 		assertThat((List<String>) ReflectionTestUtils.getField(launcher, "paths")).containsExactly("/foo.jar", "/bar/");
 	}

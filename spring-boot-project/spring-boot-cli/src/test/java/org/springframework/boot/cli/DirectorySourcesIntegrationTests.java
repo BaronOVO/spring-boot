@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DirectorySourcesIntegrationTests {
 
 	@RegisterExtension
-	private CliTester cli;
+	CliTester cli;
 
 	DirectorySourcesIntegrationTests(CapturedOutput capturedOutput) {
 		this.cli = new CliTester("src/test/resources/dir-sample/", capturedOutput);
